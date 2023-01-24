@@ -15,13 +15,28 @@ function WriteLog {
         [Switch] $NoDate,
         [Switch] $OutNull,
         
+        [Parameter(ParameterSetName = "")]
+        [ValidateSet( # 信息層級
+            'OFF',          # 無
+            'FATAL',        # 紅底
+            'ERROR',        # 紅字
+            'WARN',         # 黃字
+            'INFO',         # 無
+            'DEBUG',        # 白字
+            'TRACE',        # 藍字
+            'ALL'           # 無
+        )]
+        [String] $Level,
+        
         [Parameter(ValueFromPipeline)]
         [String] $Msg
     )
     # 設定值
     if (!$__LoggerSetting__) {
         $Script:__LoggerSetting__ = [PSCustomObject]@{
-            MaxFileSize    = 10MB;
+            LogLevel       = 'INFO'
+            MsgLevel       = 'INFO'
+            MaxFileSize    = 10MB
             MaxBackupIndex = 5
         }
     }
@@ -96,15 +111,37 @@ function WriteLog {
         $LogStr = "[$((Get-Date).Tostring($FormatType))] $Msg"
     }
     
+    # 獲取層級映射表
+    $LvTable   = (Get-Variable "Level").Attributes.ValidValues
+    $LvMapping = @{}; for ($i = 0; $i -lt $LvTable.Count; $i++) { $LvMapping += @{$LvTable[$i]=$i} }
+    # 獲取日誌層級
+    $LogLvInfo = $__LoggerSetting__.LogLevel
+    if (!$LogLvInfo) { $LogLvInfo = $LvTable[($LvTable.Count-1)] } # 全域值打錯時的預設值
+    $LogLvRank = $LvMapping[$LogLvInfo]
+    # Write-Host "Logレベル:: [$LogLvInfo,$LogLvRank]"
+    # 獲取信息層級
+    if (!$Level) {
+        $MsgLvInfo = $__LoggerSetting__.MsgLevel
+        if (!$MsgLvInfo) { $MsgLvInfo = $LvTable[0] } # 全域值打錯時的預設值
+    } else { $MsgLvInfo = $Level }
+    $MsgLvRank = $LvMapping[$MsgLvInfo]
+    # Write-Host "Msgレベル:: [$MsgLvInfo,$MsgLvRank]"
+    
     # 輸出日誌
-    [IO.File]::AppendAllText($Path, "$LogStr`r`n", $Enc)
+    if (($LogLvRank -ge $MsgLvRank) -and ($LogLvRank -gt 0)) {
+        # Write-Host "ログに出力しました。"
+        [IO.File]::AppendAllText($Path, "$LogStr`r`n", $Enc)
+    } else { # 信息層級低於日誌層級時添加星號警示
+        $LogStr = "*$LogStr"
+    }
+    # 輸出到終端機
     if (!$OutNull) {
         if ($Msg -match "^Error:: ") {
             Write-Host $LogStr -ForegroundColor:Red
         } elseif ($Msg -match "^Warring:: ") {
             Write-Host $LogStr -ForegroundColor:Yellow
         } elseif ($Msg -match "^Info:: ") {
-            Write-Host $LogStr -ForegroundColor:Yellow
+            Write-Host $LogStr
         } else {
             Write-Host $LogStr
         }
@@ -116,4 +153,5 @@ function WriteLog {
 # ("ABCDEㄅㄆㄇㄈあいうえお")|WriteLog -OutNull -UTF8BOM
 # @("ABCDE", "ㄅㄆㄇㄈ", "あいうえお") -join "`r`n" |WriteLog -UTF8BOM
 # (@("ABCDE", "ㄅㄆㄇㄈ", "あいうえお")|Out-String).TrimEnd("`r`n") |WriteLog -UTF8BOM
+# $Script:__LoggerSetting__ = $Null; ("ABCDEㄅㄆㄇㄈあいうえお")|WriteLog -UTF8BOM
 # $Script:__LoggerSetting__ = $Null; ("ABCDEㄅㄆㄇㄈあいうえお")|WriteLog -UTF8BOM
