@@ -18,12 +18,12 @@ function WriteLog {
         [Parameter(ParameterSetName = "")]
         [ValidateSet( # 信息層級
             'OFF',          # 無
-            'FATAL',        # 紅底
+            'FATAL',        # 紅字且日期也紅字
             'ERROR',        # 紅字
             'WARN',         # 黃字
-            'INFO',         # 無
-            'DEBUG',        # 白字
-            'TRACE',        # 藍字
+            'INFO',         # 藍
+            'DEBUG',        # 紫
+            'TRACE',        # 無
             'ALL'           # 無
         )]
         [String] $Level,
@@ -34,8 +34,8 @@ function WriteLog {
     # 設定值
     if (!$__LoggerSetting__) {
         $Script:__LoggerSetting__ = [PSCustomObject]@{
-            LogLevel       = 'INFO'
-            MsgLevel       = 'INFO'
+            LogLevel       = 'ALL'
+            MsgLevel       = $Null
             MaxFileSize    = 10MB
             MaxBackupIndex = 5
         }
@@ -168,10 +168,10 @@ function WriteLog {
             Write-Host $Msg -ForegroundColor:Yellow
         } elseif ($MsgLvInfo -eq "INFO") {
             Write-Host $Date -NoNewline -ForegroundColor:DarkGray
-            Write-Host $Msg
+            Write-Host $Msg -ForegroundColor:Cyan
         } elseif ($MsgLvInfo -eq "DEBUG") {
             Write-Host $Date -NoNewline -ForegroundColor:DarkGray
-            Write-Host $Msg
+            Write-Host $Msg -ForegroundColor:Magenta
         } elseif ($MsgLvInfo -eq "TRACE") {
             Write-Host $Date -NoNewline -ForegroundColor:DarkGray
             Write-Host $Msg
@@ -199,14 +199,22 @@ function WriteLog {
 #     MaxFileSize    = 10MB
 #     MaxBackupIndex = 5
 # }
-# 'OFF::OFF'     |WriteLog -UTF8BOM
-# 'FATAL::FATAL' |WriteLog -UTF8BOM
-# 'ERROR::ERROR' |WriteLog -UTF8BOM
-# 'WARN::WARN'   |WriteLog -UTF8BOM
-# 'INFO::INFO'   |WriteLog -UTF8BOM
-# 'DEBUG::DEBUG' |WriteLog -UTF8BOM
-# 'TRACE::TRACE' |WriteLog -UTF8BOM
-# 'ALL::ALL'     |WriteLog -UTF8BOM
+# 'OFF::LogMsg'   |WriteLog -UTF8BOM
+# 'FATAL::LogMsg' |WriteLog -UTF8BOM
+# 'ERROR::LogMsg' |WriteLog -UTF8BOM
+# 'WARN::LogMsg'  |WriteLog -UTF8BOM
+# 'INFO::LogMsg'  |WriteLog -UTF8BOM
+# 'DEBUG::LogMsg' |WriteLog -UTF8BOM
+# 'TRACE::LogMsg' |WriteLog -UTF8BOM
+# 'ALL::LogMsg'   |WriteLog -UTF8BOM
+# 'LogMsg' |WriteLog -UTF8BOM -Level:OFF
+# 'LogMsg' |WriteLog -UTF8BOM -Level:FATAL
+# 'LogMsg' |WriteLog -UTF8BOM -Level:ERROR
+# 'LogMsg' |WriteLog -UTF8BOM -Level:WARN
+# 'LogMsg' |WriteLog -UTF8BOM -Level:INFO
+# 'LogMsg' |WriteLog -UTF8BOM -Level:DEBUG
+# 'LogMsg' |WriteLog -UTF8BOM -Level:TRACE
+# 'LogMsg' |WriteLog -UTF8BOM -Level:ALL
 
 # 'ERROR::ERROR' |WriteLog -UTF8BOM -Level:FATAL
 # 'ERROR::ERROR' |WriteLog -UTF8BOM
