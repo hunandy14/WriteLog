@@ -105,22 +105,42 @@ function WriteLog {
             } $Enc = $__SysEnc__
         }
     } else { $Enc = $Encoding }
-       
+    
+    
+    
     # 獲取層級映射表
     $LvTable   = (Get-Variable "Level").Attributes.ValidValues
     $LvMapping = @{}; for ($i = 0; $i -lt $LvTable.Count; $i++) { $LvMapping += @{$LvTable[$i]=$i} }
     # 獲取日誌層級
     $LogLvInfo = $__LoggerSetting__.LogLevel
-    if (!$LogLvInfo) { $LogLvInfo = $LvTable[($LvTable.Count-1)] } # 全域值打錯時的預設值
-    $LogLvRank = $LvMapping[$LogLvInfo]
-    # Write-Host "Logレベル:: [$LogLvInfo,$LogLvRank]"
+    if ($LogLvInfo) { $LogLvRank = $LvMapping[$LogLvInfo] }
+    if (!$LogLvRank) { # LogLv全域值打錯時的強制校正
+        # Write-Host "LogLv全域值打錯時的強制校正"
+        $LogLvInfo = $LvTable[($LvTable.Count-1)]
+        $LogLvRank = $LvMapping[$LogLvInfo]
+    }
     # 獲取信息層級
     if (!$Level) {
-        $MsgLvInfo = $__LoggerSetting__.MsgLevel
-        if (!$MsgLvInfo) { $MsgLvInfo = $LvTable[0] } # 全域值打錯時的預設值
-    } else { $MsgLvInfo = $Level }
-    $MsgLvRank = $LvMapping[$MsgLvInfo]
+        if ($Msg -match "^(.*?)::") { $StrLvInfo = $Matches[1] }
+        # Level沒有但是Str有, 且LvMapping裡查的到
+        if ($StrLvInfo -and $LvMapping[$StrLvInfo]) {
+            $MsgLvInfo = $StrLvInfo
+        } else { # Level和Str都沒有取全域值
+            $MsgLvInfo = $__LoggerSetting__.MsgLevel
+        }
+    } else { # Level有就取Level的值, 無視Str
+        $MsgLvInfo = $Level
+    }
+    if ($MsgLvInfo) { $MsgLvRank = $LvMapping[$MsgLvInfo] }
+    if (!$MsgLvRank) { # MsgLv的(Str值,全域值)打錯的強制校正
+        # Write-Host "MsgLv的(Str值,全域值)打錯的強制校正"
+        $MsgLvInfo = $LvTable[0]
+        $MsgLvRank = $LvMapping[$MsgLvInfo]
+    }
+    # Write-Host "Logレベル:: [$LogLvInfo,$LogLvRank]"
     # Write-Host "Msgレベル:: [$MsgLvInfo,$MsgLvRank]"
+    
+    
     
     # 時間標記
     if (!$NoDate) { $Date = "[$((Get-Date).Tostring($FormatType))] " } else { $Date = "" }
@@ -134,28 +154,28 @@ function WriteLog {
     # 輸出到終端機
     if (!$OutNull) {
         if ($Null) {
-        } elseif ($Msg -match "^OFF::") {
+        } elseif ($MsgLvInfo -eq "OFF") {
             Write-Host $Date -NoNewline -ForegroundColor:DarkGray
             Write-Host $Msg
-        } elseif ($Msg -match "^FATAL::") {
+        } elseif ($MsgLvInfo -eq "FATAL") {
             Write-Host $Date -NoNewline -ForegroundColor:Red
             Write-Host $Msg -ForegroundColor:Red
-        } elseif ($Msg -match "^ERROR::") {
+        } elseif ($MsgLvInfo -eq "ERROR") {
             Write-Host $Date -NoNewline -ForegroundColor:DarkGray
             Write-Host $Msg -ForegroundColor:Red
-        } elseif ($Msg -match "^WARN::") {
+        } elseif ($MsgLvInfo -eq "WARN") {
             Write-Host $Date -NoNewline -ForegroundColor:DarkGray
             Write-Host $Msg -ForegroundColor:Yellow
-        } elseif ($Msg -match "^INFO::") {
+        } elseif ($MsgLvInfo -eq "INFO") {
             Write-Host $Date -NoNewline -ForegroundColor:DarkGray
             Write-Host $Msg
-        } elseif ($Msg -match "^DEBUG::") {
+        } elseif ($MsgLvInfo -eq "DEBUG") {
             Write-Host $Date -NoNewline -ForegroundColor:DarkGray
             Write-Host $Msg
-        } elseif ($Msg -match "^TRACE::") {
+        } elseif ($MsgLvInfo -eq "TRACE") {
             Write-Host $Date -NoNewline -ForegroundColor:DarkGray
             Write-Host $Msg
-        } elseif ($Msg -match "^ALL::") {
+        } elseif ($MsgLvInfo -eq "ALL") {
             Write-Host $Date -NoNewline -ForegroundColor:DarkGray
             Write-Host $Msg
         } else {
@@ -187,3 +207,8 @@ function WriteLog {
 # 'DEBUG::DEBUG' |WriteLog -UTF8BOM
 # 'TRACE::TRACE' |WriteLog -UTF8BOM
 # 'ALL::ALL'     |WriteLog -UTF8BOM
+
+# 'ERROR::ERROR' |WriteLog -UTF8BOM -Level:FATAL
+# 'ERROR::ERROR' |WriteLog -UTF8BOM
+# 'ABCD' |WriteLog -UTF8BOM -Level:FATAL
+# 'ABCD' |WriteLog -UTF8BOM
