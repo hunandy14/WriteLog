@@ -32,11 +32,12 @@ function WriteLog {
             $Path = ((Get-Item $PSCommandPath).BaseName + ".log")
         } else { Write-Error "Input Path `"$Path`" is Null."; return }
     } $Path = [IO.Path]::GetFullPath([IO.Path]::Combine((Get-Location -PSProvider FileSystem).ProviderPath, $Path))
+    if (!(Test-Path $Path)) { New-Item $Path -Force | Out-Null }
             
     # 日誌檔案大小管理超出限制自動備份
     $MxSiz = $__LoggerSetting__.MaxFileSize
     $MxIdx = $__LoggerSetting__.MaxBackupIndex
-    if (((Get-ChildItem $Path).Length) -ge $MxSiz) {
+    if (((Get-ChildItem $Path -EA:Stop).Length) -ge $MxSiz) {
         # 獲取清單
         $FileName  = [IO.Path]::GetFileNameWithoutExtension($Path)
         $Extension = [IO.Path]::GetExtension($Path)
@@ -95,8 +96,7 @@ function WriteLog {
         $LogStr = "[$((Get-Date).Tostring($FormatType))] $Msg"
     }
     
-    # 輸出檔案
-    if (!(Test-Path $Path)) { New-Item $Path -Force | Out-Null }
+    # 輸出日誌
     [IO.File]::AppendAllText($Path, "$LogStr`r`n", $Enc)
     if (!$OutNull) {
         if ($Msg -match "^Error:: ") {
