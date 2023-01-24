@@ -105,12 +105,7 @@ function WriteLog {
             } $Enc = $__SysEnc__
         }
     } else { $Enc = $Encoding }
-    
-    # 追加時間標記
-    if ($NoDate) { $LogStr = $Msg } else {
-        $LogStr = "[$((Get-Date).Tostring($FormatType))] $Msg"
-    }
-    
+       
     # 獲取層級映射表
     $LvTable   = (Get-Variable "Level").Attributes.ValidValues
     $LvMapping = @{}; for ($i = 0; $i -lt $LvTable.Count; $i++) { $LvMapping += @{$LvTable[$i]=$i} }
@@ -127,23 +122,45 @@ function WriteLog {
     $MsgLvRank = $LvMapping[$MsgLvInfo]
     # Write-Host "Msgレベル:: [$MsgLvInfo,$MsgLvRank]"
     
+    # 時間標記
+    if (!$NoDate) { $Date = "[$((Get-Date).Tostring($FormatType))] " } else { $Date = "" }
+    
     # 輸出日誌
     if (($LogLvRank -ge $MsgLvRank) -and ($LogLvRank -gt 0)) {
         # Write-Host "ログに出力しました。"
-        [IO.File]::AppendAllText($Path, "$LogStr`r`n", $Enc)
-    } else { # 信息層級低於日誌層級時添加星號警示
-        $LogStr = "*$LogStr"
-    }
+        [IO.File]::AppendAllText($Path, "$Date$Msg`r`n", $Enc)
+    } else { $Msg = "*$Msg" } # 信息層級低於日誌層級時添加星號警示
+    
     # 輸出到終端機
     if (!$OutNull) {
-        if ($Msg -match "^Error:: ") {
-            Write-Host $LogStr -ForegroundColor:Red
-        } elseif ($Msg -match "^Warring:: ") {
-            Write-Host $LogStr -ForegroundColor:Yellow
-        } elseif ($Msg -match "^Info:: ") {
-            Write-Host $LogStr
+        if ($Null) {
+        } elseif ($Msg -match "^OFF::") {
+            Write-Host $Date -NoNewline -ForegroundColor:DarkGray
+            Write-Host $Msg
+        } elseif ($Msg -match "^FATAL::") {
+            Write-Host $Date -NoNewline -ForegroundColor:Red
+            Write-Host $Msg -ForegroundColor:Red
+        } elseif ($Msg -match "^ERROR::") {
+            Write-Host $Date -NoNewline -ForegroundColor:DarkGray
+            Write-Host $Msg -ForegroundColor:Red
+        } elseif ($Msg -match "^WARN::") {
+            Write-Host $Date -NoNewline -ForegroundColor:DarkGray
+            Write-Host $Msg -ForegroundColor:Yellow
+        } elseif ($Msg -match "^INFO::") {
+            Write-Host $Date -NoNewline -ForegroundColor:DarkGray
+            Write-Host $Msg
+        } elseif ($Msg -match "^DEBUG::") {
+            Write-Host $Date -NoNewline -ForegroundColor:DarkGray
+            Write-Host $Msg
+        } elseif ($Msg -match "^TRACE::") {
+            Write-Host $Date -NoNewline -ForegroundColor:DarkGray
+            Write-Host $Msg
+        } elseif ($Msg -match "^ALL::") {
+            Write-Host $Date -NoNewline -ForegroundColor:DarkGray
+            Write-Host $Msg
         } else {
-            Write-Host $LogStr
+            Write-Host $Date -NoNewline -ForegroundColor:DarkGray
+            Write-Host $Msg
         }
     }
 } # ("ABCDEㄅㄆㄇㄈあいうえお")|WriteLog -UTF8BOM
@@ -155,3 +172,18 @@ function WriteLog {
 # (@("ABCDE", "ㄅㄆㄇㄈ", "あいうえお")|Out-String).TrimEnd("`r`n") |WriteLog -UTF8BOM
 # $Script:__LoggerSetting__ = $Null; ("ABCDEㄅㄆㄇㄈあいうえお")|WriteLog -UTF8BOM
 # $Script:__LoggerSetting__ = $Null; ("ABCDEㄅㄆㄇㄈあいうえお")|WriteLog -UTF8BOM
+
+# $Script:__LoggerSetting__ = [PSCustomObject]@{
+#     LogLevel       = ''
+#     MsgLevel       = ''
+#     MaxFileSize    = 10MB
+#     MaxBackupIndex = 5
+# }
+# 'OFF::OFF'     |WriteLog -UTF8BOM
+# 'FATAL::FATAL' |WriteLog -UTF8BOM
+# 'ERROR::ERROR' |WriteLog -UTF8BOM
+# 'WARN::WARN'   |WriteLog -UTF8BOM
+# 'INFO::INFO'   |WriteLog -UTF8BOM
+# 'DEBUG::DEBUG' |WriteLog -UTF8BOM
+# 'TRACE::TRACE' |WriteLog -UTF8BOM
+# 'ALL::ALL'     |WriteLog -UTF8BOM
