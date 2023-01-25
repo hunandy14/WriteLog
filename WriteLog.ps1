@@ -27,6 +27,7 @@ function WriteLog {
             'ALL'           # 無
         )]
         [String] $Level,
+        [Switch] $AddLevelToMsg,
         
         [Parameter(ValueFromPipeline)]
         [String] $Msg
@@ -36,6 +37,7 @@ function WriteLog {
         $Script:__LoggerSetting__ = [PSCustomObject]@{
             LogLevel       = 'ALL'
             MsgLevel       = $Null
+            AddLevelToMsg  = $False
             MaxFileSize    = 10MB
             MaxBackupIndex = 5
         }
@@ -140,6 +142,21 @@ function WriteLog {
     # Write-Host "Logレベル:: [$LogLvInfo,$LogLvRank]"
     # Write-Host "Msgレベル:: [$MsgLvInfo,$MsgLvRank]"
     
+    # 根據層級追加層級信息到Msg字串中
+    if (!$AddLevelToMsg -and ($__LoggerSetting__.AddLevelToMsg -is [bool])) {
+        # 如果AddLevelToMsg參數沒設定就從全域變數取值
+        $AddLevelToMsg = $__LoggerSetting__.AddLevelToMsg
+    }
+    if ($AddLevelToMsg) {
+        # 判定字串層級是否有效
+        if ($Msg -match "^(.*?)::") { $StrLvInfo = $Matches[1] }
+        if ($StrLvInfo -and $LvMapping[$StrLvInfo]) { # 字串層級有效修改層級
+            $Msg = $Msg -replace("^$StrLvInfo","$MsgLvInfo")
+        } else { # 字串層級無效直接添加
+            $Msg = "$MsgLvInfo::$Msg"
+        }
+    }
+    
     
     
     # 時間標記
@@ -196,6 +213,7 @@ function WriteLog {
 # $Script:__LoggerSetting__ = [PSCustomObject]@{
 #     LogLevel       = ''
 #     MsgLevel       = ''
+#     AddLevelToMsg  = $true
 #     MaxFileSize    = 10MB
 #     MaxBackupIndex = 5
 # }
@@ -215,8 +233,11 @@ function WriteLog {
 # 'LogMsg' |WriteLog -UTF8BOM -Level:DEBUG
 # 'LogMsg' |WriteLog -UTF8BOM -Level:TRACE
 # 'LogMsg' |WriteLog -UTF8BOM -Level:ALL
-
+#
 # 'ERROR::ERROR' |WriteLog -UTF8BOM -Level:FATAL
 # 'ERROR::ERROR' |WriteLog -UTF8BOM
 # 'ABCD' |WriteLog -UTF8BOM -Level:FATAL
 # 'ABCD' |WriteLog -UTF8BOM
+#
+# 'ERROR::ERROR' |WriteLog -UTF8BOM -Level:FATAL -AddLevelToMsg
+# 'ERROR' |WriteLog -UTF8BOM -Level:FATAL
