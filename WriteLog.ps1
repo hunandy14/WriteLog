@@ -50,10 +50,12 @@ function WriteLog {
         } else { Write-Error "Input Path `"$Path`" is Null."; return }
     } $Path = [IO.Path]::GetFullPath([IO.Path]::Combine((Get-Location -PSProvider FileSystem).ProviderPath, $Path))
     if (!(Test-Path $Path)) { New-Item $Path -Force | Out-Null }
-            
+    
     # 日誌檔案大小管理超出限制自動備份
     $MxSiz = $__LoggerSetting__.MaxFileSize
     $MxIdx = $__LoggerSetting__.MaxBackupIndex
+    if ($MxSiz -le 0) { $MxSiz = 10MB }
+    if ($MxIdx -le 0) { $MxIdx = 5 }
     if (((Get-ChildItem $Path -EA:Stop).Length) -ge $MxSiz) {
         # 獲取清單
         $FileName  = [IO.Path]::GetFileNameWithoutExtension($Path)
@@ -214,8 +216,8 @@ function WriteLog {
 #     LogLevel       = ''
 #     MsgLevel       = ''
 #     AddLevelToMsg  = $true
-#     MaxFileSize    = 10MB
-#     MaxBackupIndex = 5
+#     MaxFileSize    = 0
+#     MaxBackupIndex = 0
 # }
 # 'OFF::LogMsg'   |WriteLog -UTF8BOM
 # 'FATAL::LogMsg' |WriteLog -UTF8BOM
