@@ -36,7 +36,7 @@ function WriteLog {
     if (!$__LoggerSetting__) {
         $Script:__LoggerSetting__ = [PSCustomObject]@{
             Path           = $Null      # 'Pwsh.log'
-            Encoding       = $Null      # 'URF-8'
+            Encoding       = $Null      # New-Object System.Text.UTF8Encoding $True
             LogLevel       = $Null      # 'ALL'
             MsgLevel       = $Null      # 'INFO'
             AddLevelToMsg  = $Null      # $False
@@ -110,7 +110,7 @@ function WriteLog {
             $Enc = New-Object System.Text.UTF8Encoding $True
         } else {                  # 預設編碼: 全域值設定, 系統語言
             if ($__LoggerSetting__.Encoding) {
-                $Enc = [Text.Encoding]::GetEncoding($__LoggerSetting__.Encoding)
+                $Enc = $__LoggerSetting__.Encoding
             } else {
                 if (!$__SysEnc__) {
                     $Script:__SysEnc__ = [Text.Encoding]::GetEncoding((powershell -nop "([Text.Encoding]::Default).WebName"))

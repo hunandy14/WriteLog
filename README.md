@@ -22,8 +22,8 @@ $Script:__LoggerSetting__ = @{Path = Pwsh.log}
 "ABCDEㄅㄆㄇㄈあいうえお" |WriteLog -UTF8BOM
 "ABCDEㄅㄆㄇㄈあいうえお" |WriteLog -Encoding ([Text.Encoding]::GetEncoding('UTF-8'))
 "ABCDEㄅㄆㄇㄈあいうえお" |WriteLog -Encoding ([Text.Encoding]::GetEncoding(950))
-$Script:__LoggerSetting__ = @{Encoding=65001}
-$Script:__LoggerSetting__ = @{Encoding='UTF-8'}
+$Script:__LoggerSetting__ = @{Encoding=[Text.Encoding]::GetEncoding('UTF-8')}
+$Script:__LoggerSetting__ = @{Encoding=New-Object System.Text.UTF8Encoding $True}
 
 # 自訂日期格式
 "LogMsg" |WriteLog -FormatType "yyyy/MM/dd HH:mm:ss.fff"
