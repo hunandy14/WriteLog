@@ -36,6 +36,7 @@ function WriteLog {
     if (!$__LoggerSetting__) {
         $Script:__LoggerSetting__ = [PSCustomObject]@{
             Path           = $Null
+            Encoding       = $Null
             LogLevel       = 'ALL'
             MsgLevel       = $Null
             AddLevelToMsg  = $False
@@ -106,10 +107,14 @@ function WriteLog {
             $Enc = New-Object System.Text.UTF8Encoding $False
         } elseif ($UTF8BOM) {     # 預選項2 : UTF8BOM
             $Enc = New-Object System.Text.UTF8Encoding $True
-        } else {                  # 預設編碼: 系統語言
-            if (!$__SysEnc__) {
-                $Script:__SysEnc__ = [Text.Encoding]::GetEncoding((powershell -nop "([Text.Encoding]::Default).WebName"))
-            } $Enc = $__SysEnc__
+        } else {                  # 預設編碼: 全域值設定, 系統語言
+            if ($__LoggerSetting__.Encoding) {
+                $Enc = [Text.Encoding]::GetEncoding($__LoggerSetting__.Encoding)
+            } else {
+                if (!$__SysEnc__) {
+                    $Script:__SysEnc__ = [Text.Encoding]::GetEncoding((powershell -nop "([Text.Encoding]::Default).WebName"))
+                } $Enc = $__SysEnc__
+            }
         }
     } else { $Enc = $Encoding }
     
