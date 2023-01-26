@@ -35,13 +35,13 @@ function WriteLog {
     # 設定值
     if (!$__LoggerSetting__) {
         $Script:__LoggerSetting__ = [PSCustomObject]@{
-            Path           = $Null
-            Encoding       = $Null
-            LogLevel       = 'ALL'
-            MsgLevel       = $Null
-            AddLevelToMsg  = $False
-            MaxFileSize    = 10MB
-            MaxBackupIndex = 5
+            Path           = $Null      # 'Pwsh.log'
+            Encoding       = $Null      # 'URF-8'
+            LogLevel       = $Null      # 'ALL'
+            MsgLevel       = $Null      # 'INFO'
+            AddLevelToMsg  = $Null      # $False
+            MaxFileSize    = $Null      # 10MB
+            MaxBackupIndex = $Null      # 5
         }
     }
     
@@ -58,8 +58,9 @@ function WriteLog {
     # 日誌檔案大小管理超出限制自動備份
     $MxSiz = $__LoggerSetting__.MaxFileSize
     $MxIdx = $__LoggerSetting__.MaxBackupIndex
-    if ($MxSiz -le 0) { $MxSiz = 10MB }
-    if ($MxIdx -le 0) { $MxIdx = 5 }
+    if (!$MxSiz -or ($MxSiz -le 0)) { $MxSiz = 10MB }
+    if (!$MxSiz -or ($MxIdx -le 0)) { $MxIdx = 5 }
+    # Write-Host "MxSiz=$MxSiz, MxIdx=$MxIdx"
     if (((Get-ChildItem $Path -EA:Stop).Length) -ge $MxSiz) {
         # 獲取清單
         $FileName  = [IO.Path]::GetFileNameWithoutExtension($Path)
