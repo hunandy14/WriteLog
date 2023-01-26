@@ -2,7 +2,7 @@
 function WriteLog {
     param (
         [Parameter(Position = 0, ParameterSetName = "")]
-        [String] $Path,
+        [String] $Path, # 優先度：參數, 全域, 檔名
         [Parameter(Position = 1, ParameterSetName = "")]
         [String] $FormatType = "yyyy/MM/dd HH:mm:ss.fff",
 
@@ -35,6 +35,7 @@ function WriteLog {
     # 設定值
     if (!$__LoggerSetting__) {
         $Script:__LoggerSetting__ = [PSCustomObject]@{
+            Path           = $Null
             LogLevel       = 'ALL'
             MsgLevel       = $Null
             AddLevelToMsg  = $False
@@ -45,7 +46,9 @@ function WriteLog {
     
     # 檢測路徑
     if  (!$Path) {
-        if ($PSCommandPath) {
+        if ($__LoggerSetting__.Path) {
+            $Path = $__LoggerSetting__.Path
+        } elseif ($PSCommandPath) {
             $Path = ((Get-Item $PSCommandPath).BaseName + ".log")
         } else { Write-Error "Input Path `"$Path`" is Null."; return }
     } $Path = [IO.Path]::GetFullPath([IO.Path]::Combine((Get-Location -PSProvider FileSystem).ProviderPath, $Path))
