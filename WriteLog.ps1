@@ -127,7 +127,7 @@ function WriteLog {
     # 獲取日誌層級
     $LogLvInfo = $__LoggerSetting__.LogLevel
     if ($LogLvInfo) { $LogLvRank = $LvMapping[$LogLvInfo] }
-    if (!$LogLvRank) { # LogLv全域值打錯時的強制校正
+    if ($LogLvRank -isnot [int]) { # LogLv全域值打錯時的強制校正
         # Write-Host "LogLv全域值打錯時的強制校正"
         $LogLvInfo = $LvTable[($LvTable.Count-1)]
         $LogLvRank = $LvMapping[$LogLvInfo]
@@ -145,7 +145,7 @@ function WriteLog {
         $MsgLvInfo = $Level
     }
     if ($MsgLvInfo) { $MsgLvRank = $LvMapping[$MsgLvInfo] }
-    if (!$MsgLvRank) { # MsgLv的(Str值,全域值)打錯的強制校正
+    if (!$MsgLvRank -isnot [int]) { # MsgLv的(Str值,全域值)打錯的強制校正
         # Write-Host "MsgLv的(Str值,全域值)打錯的強制校正"
         $MsgLvInfo = $LvTable[0]
         $MsgLvRank = $LvMapping[$MsgLvInfo]
@@ -177,7 +177,7 @@ function WriteLog {
     if (($LogLvRank -ge $MsgLvRank) -and ($LogLvRank -gt 0)) {
         # Write-Host "ログに出力しました。"
         [IO.File]::AppendAllText($Path, "$Date$Msg`r`n", $Enc)
-    } else { $Msg = "*$Msg" } # 信息層級低於日誌層級時添加星號警示
+    } else { $Date = "*$Date" } # 信息層級低於日誌層級時添加星號警示
     
     # 輸出到終端機
     if (!$OutNull) {
@@ -252,3 +252,6 @@ function WriteLog {
 #
 # 'ERROR::ERROR' |WriteLog -UTF8BOM -Level:FATAL -AddLevelToMsg
 # 'ERROR' |WriteLog -UTF8BOM -Level:FATAL
+# 
+# $Script:__LoggerSetting__ = @{LogLevel='OFF'}
+# "ABCDE" |WriteLog '.\WriteLog.log'
