@@ -255,3 +255,9 @@ function WriteLog {
 # 
 # $Script:__LoggerSetting__ = @{LogLevel='OFF'}
 # "ABCDE" |WriteLog '.\WriteLog.log'
+# 
+# if (!(Test-Path "./NoFile.txt")) {
+#     $Msg = 'ERROR::File is not exist.'
+#     $Msg | WriteLog -OutNull -UTF8BOM
+#     Write-Error $Msg -ErrorAction Stop
+# } Write-Host "ErrorAction Stop Test..."

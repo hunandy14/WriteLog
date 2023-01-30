@@ -55,3 +55,15 @@ $Script:__LoggerSetting__ = @{MaxFileSize=10MB; MaxBackupIndex=5}
 @("ABCDE", "ㄅㄆㄇㄈ", "あいうえお") -join "`r`n" |WriteLog
 (@("ABCDE", "ㄅㄆㄇㄈ", "あいうえお")|Out-String).TrimEnd("`r`n") |WriteLog
 ```
+
+<br><br><br>
+
+拋出終止例外範例
+```ps1
+if (!(Test-Path "./NoFile.txt")) {
+    $Msg = 'ERROR::File is not exist.'
+    $Msg | WriteLog -OutNull -UTF8BOM
+    Write-Error $Msg -ErrorAction Stop
+} Write-Host "ErrorAction Stop Test..."
+
+```
