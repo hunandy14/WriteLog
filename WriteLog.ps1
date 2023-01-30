@@ -123,7 +123,7 @@ function WriteLog {
     
     # 獲取層級映射表
     $LvTable   = (Get-Variable "Level").Attributes.ValidValues
-    $LvMapping = @{}; for ($i = 0; $i -lt $LvTable.Count; $i++) { $LvMapping += @{$LvTable[$i]=$i} }
+    $LvMapping = @{}; for ($i = 0; $i -lt $LvTable.Count; $i++) { $LvMapping += @{$LvTable[$i]=[int]$i} }
     # 獲取日誌層級
     $LogLvInfo = $__LoggerSetting__.LogLevel
     if ($LogLvInfo) { $LogLvRank = $LvMapping[$LogLvInfo] }
@@ -145,7 +145,7 @@ function WriteLog {
         $MsgLvInfo = $Level
     }
     if ($MsgLvInfo) { $MsgLvRank = $LvMapping[$MsgLvInfo] }
-    if (!$MsgLvRank -isnot [int]) { # MsgLv的(Str值,全域值)打錯的強制校正
+    if ($MsgLvRank -isnot [int]) { # MsgLv的(Str值,全域值)打錯的強制校正
         # Write-Host "MsgLv的(Str值,全域值)打錯的強制校正"
         $MsgLvInfo = $LvTable[0]
         $MsgLvRank = $LvMapping[$MsgLvInfo]
