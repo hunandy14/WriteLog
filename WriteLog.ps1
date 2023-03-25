@@ -13,6 +13,7 @@ function WriteLog {
         
         [Parameter(ParameterSetName = "")]
         [Switch] $NoDate,
+        [Switch] $NoNewline,
         [Switch] $OutNull,
         
         [Parameter(ParameterSetName = "")]
@@ -175,8 +176,10 @@ function WriteLog {
     
     # 輸出日誌
     if (($LogLvRank -ge $MsgLvRank) -and ($LogLvRank -gt 0)) {
-        # Write-Host "ログに出力しました。"
-        [IO.File]::AppendAllText($Path, "$Date$Msg`r`n", $Enc)
+        if (!$NoNewline) {
+            $LogMsg = "$Date$Msg`r`n"
+        } else { $LogMsg = "$Date$Msg" }
+        [IO.File]::AppendAllText($Path, $LogMsg, $Enc)
     } else { $Date = "*$Date" } # 信息層級低於日誌層級時添加星號警示
     
     # 輸出到終端機
@@ -184,31 +187,31 @@ function WriteLog {
         if ($Null) {
         } elseif ($MsgLvInfo -eq "OFF") {
             Write-Host $Date -NoNewline -ForegroundColor:DarkGray
-            Write-Host $Msg
+            Write-Host $Msg -NoNewline:$NoNewline
         } elseif ($MsgLvInfo -eq "FATAL") {
             Write-Host $Date -NoNewline -ForegroundColor:Red
-            Write-Host $Msg -ForegroundColor:Red
+            Write-Host $Msg -ForegroundColor:Red -NoNewline:$NoNewline
         } elseif ($MsgLvInfo -eq "ERROR") {
             Write-Host $Date -NoNewline -ForegroundColor:DarkGray
-            Write-Host $Msg -ForegroundColor:Red
+            Write-Host $Msg -ForegroundColor:Red -NoNewline:$NoNewline
         } elseif ($MsgLvInfo -eq "WARN") {
             Write-Host $Date -NoNewline -ForegroundColor:DarkGray
-            Write-Host $Msg -ForegroundColor:Yellow
+            Write-Host $Msg -ForegroundColor:Yellow -NoNewline:$NoNewline
         } elseif ($MsgLvInfo -eq "INFO") {
             Write-Host $Date -NoNewline -ForegroundColor:DarkGray
-            Write-Host $Msg -ForegroundColor:Cyan
+            Write-Host $Msg -ForegroundColor:Cyan -NoNewline:$NoNewline
         } elseif ($MsgLvInfo -eq "DEBUG") {
             Write-Host $Date -NoNewline -ForegroundColor:DarkGray
-            Write-Host $Msg -ForegroundColor:Magenta
+            Write-Host $Msg -ForegroundColor:Magenta -NoNewline:$NoNewline
         } elseif ($MsgLvInfo -eq "TRACE") {
             Write-Host $Date -NoNewline -ForegroundColor:DarkGray
-            Write-Host $Msg
+            Write-Host $Msg -NoNewline:$NoNewline
         } elseif ($MsgLvInfo -eq "ALL") {
             Write-Host $Date -NoNewline -ForegroundColor:DarkGray
-            Write-Host $Msg
+            Write-Host $Msg -NoNewline:$NoNewline
         } else {
             Write-Host $Date -NoNewline -ForegroundColor:DarkGray
-            Write-Host $Msg
+            Write-Host $Msg -NoNewline:$NoNewline
         }
     }
 } # ("ABCDEㄅㄆㄇㄈあいうえお")|WriteLog -UTF8BOM
